@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MESSLIFE — Checkpoints</title>
+<style>
+:root{--bg:#0d0f16;--p:#171a25;--p2:#222638;--t:#fff;--m:#a8adbf;--line:#363b4e;--purple:#9a43ff;--cyan:#16d5e6;--green:#3de0a5}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t);font-family:Arial,Helvetica,sans-serif}.wrap{max-width:760px;margin:auto;padding:18px 14px 42px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}.back{color:#fff;background:var(--p2);border:1px solid var(--line);border-radius:11px;padding:9px 12px;font-weight:800;font-size:12px}.brand{font-weight:900;letter-spacing:3px;color:var(--cyan);font-size:18px}
+h1{font-size:28px;margin:8px 0 4px}.sub{color:var(--m);margin-bottom:16px;font-size:14px}
+.panel{background:var(--p);border:1px solid var(--line);border-radius:20px;padding:16px;margin:11px 0}.panel h2{margin:0 0 12px;font-size:17px}
+.fields{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.field label{display:block;color:var(--m);font-size:11px;margin:0 0 5px;white-space:nowrap}.field input{width:100%;background:#0f121a;color:#fff;border:1px solid #42475b;border-radius:10px;padding:9px 10px;font-size:15px;min-width:0}
+.field.count{grid-column:span 4}.field.count input{border-color:#657cf5;background:#141827}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.actions button{margin:0}
+button{border:0;border-radius:12px;padding:12px 13px;font-weight:900;cursor:pointer;font-size:13px}.primary{background:linear-gradient(90deg,var(--purple),#657cf5,var(--cyan));color:#080910}.secondary{background:var(--p2);color:#fff}
+.result{display:flex;flex-wrap:wrap;gap:7px;min-height:28px}.chip{background:#252a3c;border:1px solid #3b4157;border-radius:9px;padding:8px 10px;font-weight:800;font-size:14px}.chip.start{background:linear-gradient(90deg,#4c2b87,#1d6070);border-color:var(--purple)}.chip.finish{background:linear-gradient(90deg,#1b6170,#187c7b);border-color:var(--cyan)}.legend{font-size:11px;color:var(--m);margin-top:10px}.legend b{color:#fff}.empty{color:var(--m);font-size:13px}
+.reset{width:100%;margin-top:2px;background:#2a2e3f;color:#fff;border:1px solid #454b61}
+.status{font-size:12px;color:var(--m);margin-top:8px}
+@media(max-width:600px){.fields{grid-template-columns:1fr 1fr}.field.count{grid-column:span 2}.actions{grid-template-columns:1fr}.field label{font-size:10px}}
+
+.dialog-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.66);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
+.dialog-backdrop.show{display:flex}
+.dialog{width:min(100%,430px);background:#20232e;border:1px solid #34394d;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 0 1px rgba(154,67,255,.12) inset;overflow:hidden}
+.dialog-accent{height:4px;background:linear-gradient(90deg,#9a43ff,#657cf5,#16d5e6)}
+.dialog-body{padding:22px 22px 18px}
+.dialog-brand{font-size:11px;letter-spacing:2px;font-weight:900;color:#16d5e6;text-transform:uppercase;margin-bottom:10px}
+.dialog-title{font-size:20px;font-weight:900;margin:0 0 9px;color:#f7f7fb}
+.dialog-message{font-size:15px;line-height:1.5;color:#a7acbd;margin:0}
+.dialog-actions{display:flex;gap:10px;padding:0 22px 20px;justify-content:flex-end}
+.dialog-btn{border:0;border-radius:12px;padding:12px 18px;font-weight:900;font-size:13px;cursor:pointer}
+.dialog-btn.cancel{background:#2a2e3d;color:#fff}
+.dialog-btn.confirm{background:linear-gradient(90deg,#9a43ff,#657cf5,#16d5e6);color:#090a10}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><a class="back" href="../../index.html">← MESSLIFE</a><div class="brand">CHECKPOINTS</div></div>
+  <h1>Generador de carrera</h1>
+  <div class="sub">Partida, meta y checkpoints · Panel del organizador</div>
+
+  <section class="panel">
+    <h2>Configuración</h2>
+    <div class="fields">
+      <div class="field count"><label>Número de checkpoints</label><input id="count" type="number" value="10" min="1"></div>
+      <div class="field"><label>Número mínimo</label><input id="nmin" type="number" value="1" min="1"></div>
+      <div class="field"><label>Número máximo</label><input id="nmax" type="number" value="187" min="1"></div>
+      <div class="field"><label>Letra inicial</label><input id="lmin" value="A" maxlength="1"></div>
+      <div class="field"><label>Letra final</label><input id="lmax" value="H" maxlength="1"></div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Generar</h2>
+    <div class="actions">
+      <button class="primary" onclick="generateCheckpoints()">GENERAR CHECKPOINTS</button>
+      <button class="secondary" onclick="generateRace()">GENERAR PARTIDA + META</button>
+    </div>
+    <div id="status" class="status"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Checkpoints generados <span id="counter">(0)</span></h2>
+    <div id="out" class="result"><div class="empty">Aún no se han generado.</div></div>
+    <div class="legend"><b>P</b> = Partida · <b>M</b> = Meta</div>
+  </section>
+
+  <section class="panel">
+    <button class="reset" onclick="resetAll()">REINICIAR CHECKPOINTS</button>
+  </section>
+</div>
+
+<script>
+
+function messlifeLocked(){
+  return localStorage.getItem('messlife_locked')==='1';
+}
+function blockResetIfLocked(){
+  if(messlifeLocked()){
+    alert('Los datos están bloqueados. Desbloquéalos desde la página principal para poder reiniciar información.');
+    return true;
+  }
+  return false;
+}
+let cps=[], start=null, finish=null;
+
+function saveCheckpointState(){
+  try{
+    localStorage.setItem('messlife_checkpoints', JSON.stringify({
+      cps,start,finish,
+      updatedAt:Date.now(),
+      count:document.getElementById('count')?.value ?? '10',
+      nmin:document.getElementById('nmin')?.value ?? '1',
+      nmax:document.getElementById('nmax')?.value ?? '187',
+      lmin:document.getElementById('lmin')?.value ?? 'A',
+      lmax:document.getElementById('lmax')?.value ?? 'H'
+    }));
+  }catch(e){}
+}
+function loadCheckpointState(){
+  try{
+    const s=JSON.parse(localStorage.getItem('messlife_checkpoints')||'null');
+    if(!s) return;
+    cps=Array.isArray(s.cps)?s.cps:[];
+    start=s.start??null;
+    finish=s.finish??null;
+    if(s.count!=null) document.getElementById('count').value=s.count;
+    if(s.nmin!=null) document.getElementById('nmin').value=s.nmin;
+    if(s.nmax!=null) document.getElementById('nmax').value=s.nmax;
+    if(s.lmin!=null) document.getElementById('lmin').value=s.lmin;
+    if(s.lmax!=null) document.getElementById('lmax').value=s.lmax;
+  }catch(e){}
+}
+
+function randomInt(a,b){return Math.floor(Math.random()*(b-a+1))+a}
+function normLetter(v){return (v||'').trim().toUpperCase().charAt(0)}
+function pool(){
+  const nmin=Math.min(+document.getElementById('nmin').value,+document.getElementById('nmax').value);
+  const nmax=Math.max(+document.getElementById('nmin').value,+document.getElementById('nmax').value);
+  let a=normLetter(document.getElementById('lmin').value)||'A';
+  let b=normLetter(document.getElementById('lmax').value)||'H';
+  if(a>b){const t=a;a=b;b=t}
+  const nums=[];for(let i=nmin;i<=nmax;i++)nums.push(String(i));
+  const letters=[];for(let c=a.charCodeAt(0);c<=b.charCodeAt(0);c++)letters.push(String.fromCharCode(c));
+  return {nums,letters,all:[...nums,...letters]};
+}
+function key(v){return typeof v==='number'?String(v):v}
+function compare(a,b){
+  const an=/^\d+$/.test(a), bn=/^\d+$/.test(b);
+  if(an&&bn)return Number(a)-Number(b);
+  if(an&&!bn)return -1;
+  if(!an&&bn)return 1;
+  return a.localeCompare(b);
+}
+function render(){
+  cps.sort(compare);
+  document.getElementById('counter').textContent=`(${cps.length})`;
+  const out=document.getElementById('out');
+  out.innerHTML=cps.length ? cps.map(v=>{
+    const cls=v===start?'start':v===finish?'finish':'';
+    const prefix=v===start?'P · ':v===finish?'M · ':'';
+    return `<span class="chip ${cls}">${prefix}${v}</span>`;
+  }).join('') : '<div class="empty">Aún no se han generado.</div>';
+}
+function generateCheckpoints(){
+  const p=pool();
+  const requested=Math.max(1,Math.floor(+document.getElementById('count').value||1));
+  const maxAllowed=p.all.length;
+  const count=Math.min(requested,maxAllowed);
+  const set=new Set();
+  while(set.size<count)set.add(p.all[randomInt(0,p.all.length-1)]);
+  cps=[...set];
+  start=null;finish=null;
+  document.getElementById('status').textContent=`Generados ${count} checkpoint${count===1?'':'s'}.`;
+  render();saveCheckpointState();
+}
+function generateRace(){
+  const p=pool();
+  if(p.all.length<2){document.getElementById('status').textContent='Se necesitan al menos 2 valores disponibles.';return}
+  start=p.all[randomInt(0,p.all.length-1)];
+  do{finish=p.all[randomInt(0,p.all.length-1)]}while(finish===start);
+  if(!cps.includes(start))cps.push(start);
+  if(!cps.includes(finish))cps.push(finish);
+  document.getElementById('status').textContent='Partida y meta generadas. Los checkpoints se sincronizarán automáticamente con Manifiesto.';
+  render();saveCheckpointState();
+}
+function copyForManifest(){
+  if(!cps.length){document.getElementById('status').textContent='Primero genera checkpoints.';return}
+  // La partida y la meta NO forman parte del manifiesto.
+  // Solo se exportan los checkpoints que deben ser firmados.
+  const manifestCheckpoints=cps.filter(v=>v!==start && v!==finish);
+  if(!manifestCheckpoints.length){
+    document.getElementById('status').textContent='No hay checkpoints para exportar al manifiesto.';
+    return;
+  }
+  const text=manifestCheckpoints.join('\n');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>document.getElementById('status').textContent='Copiado. Ahora pégalo en Manifiesto.').catch(()=>fallbackCopy(text));
+  }else fallbackCopy(text);
+}
+function fallbackCopy(text){
+  const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');document.getElementById('status').textContent='Copiado. Ahora pégalo en Manifiesto.'}catch(e){document.getElementById('status').textContent='No se pudo copiar automáticamente; selecciona y copia los checkpoints.'}
+  ta.remove();
+}
+function resetAll(){
+  if(blockResetIfLocked())return;
+  cps=[];start=null;finish=null;
+  try{localStorage.removeItem('messlife_checkpoints')}catch(e){}
+  document.getElementById('status').textContent='Checkpoints reiniciados.';
+  render();
+  saveCheckpointState();
+}
+
+['count','nmin','nmax','lmin','lmax'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('change',saveCheckpointState);
+});
+loadCheckpointState();
+render();
+
+</script>
+
+<div class="dialog-backdrop" id="messlifeDialog" aria-hidden="true">
+  <div class="dialog" role="dialog" aria-modal="true">
+    <div class="dialog-accent"></div>
+    <div class="dialog-body">
+      <div class="dialog-brand">MESSLIFE</div>
+      <h3 class="dialog-title" id="messlifeDialogTitle">Aviso</h3>
+      <p class="dialog-message" id="messlifeDialogMessage"></p>
+    </div>
+    <div class="dialog-actions" id="messlifeDialogActions"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const backdrop=document.getElementById('messlifeDialog');
+  if(!backdrop)return;
+  const title=document.getElementById('messlifeDialogTitle');
+  const message=document.getElementById('messlifeDialogMessage');
+  const actions=document.getElementById('messlifeDialogActions');
+  let resolver=null;
+  function close(value){
+    backdrop.classList.remove('show');
+    backdrop.setAttribute('aria-hidden','true');
+    if(resolver){const r=resolver;resolver=null;r(value);}
+  }
+  window.messlifeDialog=function(opts){
+    opts=opts||{};
+    title.textContent=opts.title||'Aviso';
+    message.textContent=opts.message||'';
+    actions.innerHTML='';
+    if(opts.confirm){
+      const cancel=document.createElement('button');
+      cancel.className='dialog-btn cancel';
+      cancel.textContent=opts.cancelText||'CANCELAR';
+      cancel.onclick=()=>close(false);
+      const ok=document.createElement('button');
+      ok.className='dialog-btn confirm';
+      ok.textContent=opts.confirmText||'ACEPTAR';
+      ok.onclick=()=>close(true);
+      actions.append(cancel,ok);
+      backdrop.onclick=e=>{if(e.target===backdrop)close(false)};
+      backdrop.onkeydown=e=>{if(e.key==='Escape')close(false)};
+      backdrop.tabIndex=-1;
+      backdrop.focus();
+      backdrop.classList.add('show');
+      backdrop.setAttribute('aria-hidden','false');
+      return new Promise(r=>resolver=r);
+    }
+    const ok=document.createElement('button');
+    ok.className='dialog-btn confirm';
+    ok.textContent=opts.okText||'ACEPTAR';
+    ok.onclick=()=>close(true);
+    actions.append(ok);
+    backdrop.onclick=e=>{if(e.target===backdrop)close(true)};
+    backdrop.classList.add('show');
+    backdrop.setAttribute('aria-hidden','false');
+    return new Promise(r=>resolver=r);
+  };
+  window.alert=function(msg){
+    return messlifeDialog({title:'Aviso',message:String(msg),okText:'ACEPTAR'});
+  };
+  window.confirm=function(msg){
+    return messlifeDialog({title:'Confirmar',message:String(msg),confirm:true,confirmText:'CONFIRMAR'});
+  };
+})();
+</script></body>
+</html>

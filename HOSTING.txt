@@ -1,0 +1,13 @@
+MESSLIFE — PUBLICACIÓN WEB
+
+Esta versión está preparada como sitio web estático/PWA.
+
+IMPORTANTE:
+- Un ZIP no puede crear por sí solo un servidor web en otro celular.
+- Para que otro organizador pueda abrir MESSLIFE desde cualquier lugar, esta carpeta debe publicarse en un servicio de hosting web estático con HTTPS.
+- Una vez publicada con HTTPS, se puede abrir desde el celular y el navegador compatible puede ofrecer "INSTALAR MESSLIFE" o "Añadir a pantalla de inicio".
+- Después de la primera carga, el service worker permite que la interfaz siga disponible sin conexión.
+- Los datos de la carrera siguen guardándose localmente en cada dispositivo.
+- Usa Exportar/Importar carrera para trasladar los datos de una carrera entre dispositivos.
+
+La carpeta es estática: no necesita una base de datos ni un backend para las funciones actuales.

@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MESSLIFE — Riesgos</title>
+<style>
+:root{
+  --bg:#0d0f16;--panel:#171a25;--panel2:#222638;--text:#fff;--muted:#a8adbf;
+  --line:#363b4e;--purple:#9a43ff;--cyan:#16d5e6;--danger:#ff536d;--ok:#3de0a5
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+.wrap{max-width:760px;margin:auto;padding:18px 14px 48px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.back{color:#fff;text-decoration:none;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:9px 12px;font-weight:800;font-size:12px}
+.brand{font-weight:900;letter-spacing:3px;color:var(--cyan);font-size:18px}
+h1{font-size:28px;margin:8px 0 4px}.sub{color:var(--muted);font-size:14px;margin-bottom:18px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px;margin:11px 0}
+.panel h2{margin:0 0 12px;font-size:17px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+label{display:block;color:var(--muted);font-size:11px;margin-bottom:5px}
+input{width:100%;background:#0f121a;color:#fff;border:1px solid #42475b;border-radius:10px;padding:10px;font-size:15px}
+button{border:0;border-radius:12px;padding:12px 13px;font-weight:900;cursor:pointer;font-size:13px}
+.primary{background:linear-gradient(90deg,var(--purple),#657cf5,var(--cyan));color:#080910}
+.secondary{background:var(--panel2);color:#fff}
+.status{color:var(--muted);font-size:12px;margin-top:8px;min-height:16px}
+.helper{color:var(--muted);font-size:12px;line-height:1.45;margin-top:8px}
+.players{display:flex;flex-direction:column;gap:9px}
+.player{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:13px;cursor:pointer}
+.player-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.player-name{font-size:16px;font-weight:900}.score{font-size:18px;font-weight:900}
+.score.safe{color:var(--ok)}.score.warn{color:#ffd166}.score.penalty{color:var(--danger)}
+.bar{height:7px;background:#0e1118;border-radius:10px;overflow:hidden;margin-top:8px}
+.fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--cyan));border-radius:10px}
+.player-foot{display:flex;justify-content:space-between;margin-top:7px;color:var(--muted);font-size:11px}
+.empty{color:var(--muted);font-size:13px}
+.detail{display:none}.detail.active{display:block}
+.detail-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.detail-head h2{margin:0}.back-detail{background:var(--panel2);color:#fff}
+.risk-options{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+.risk-option{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:13px 10px;text-align:center;cursor:pointer;color:#fff}
+.risk-option:hover{border-color:var(--purple)}
+.risk-option.active{border-color:var(--purple);box-shadow:0 0 0 1px var(--purple) inset;background:rgba(154,67,255,.12)}
+.risk-icon{font-size:22px;display:block;margin-bottom:6px}
+.risk-name{font-size:12px;font-weight:900;line-height:1.25}.risk-points{font-size:11px;color:var(--muted);margin-top:4px}
+.shared{background:#10131c;border:1px solid var(--line);border-radius:15px;padding:14px;margin-top:12px}
+.shared-head{display:flex;justify-content:space-between;align-items:end;gap:10px}
+.shared-label{color:var(--muted);font-size:12px}.shared-value{font-size:28px;font-weight:900}
+.circles{display:flex;justify-content:center;gap:11px;flex-wrap:wrap;margin-top:13px}
+.risk-circle{width:32px;height:32px;border-radius:50%;border:2px solid var(--purple);background:transparent;padding:0;pointer-events:none}
+.risk-circle.active{background:var(--purple);box-shadow:0 0 12px rgba(154,67,255,.35)}
+.limit{font-size:11px;color:var(--muted);margin-top:4px}
+.penalty{border-color:rgba(255,83,109,.55);background:rgba(255,83,109,.08)}
+.penalty .shared-value{color:var(--danger)}
+.selected{font-size:11px;color:var(--muted);margin-top:9px;text-align:center}
+.reset{width:100%;margin-top:10px}
+.rules{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:9px}
+.rule{background:#10131c;border:1px solid var(--line);border-radius:11px;padding:9px 7px;text-align:center;font-size:10px;color:var(--muted)}
+.rule strong{display:block;color:#fff;font-size:12px;margin-bottom:3px}
+@media(max-width:600px){
+  .grid{grid-template-columns:1fr}.rules{grid-template-columns:1fr}
+  .risk-options{grid-template-columns:1fr}
+}
+
+.dialog-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.66);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
+.dialog-backdrop.show{display:flex}
+.dialog{width:min(100%,430px);background:#20232e;border:1px solid #34394d;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 0 1px rgba(154,67,255,.12) inset;overflow:hidden}
+.dialog-accent{height:4px;background:linear-gradient(90deg,#9a43ff,#657cf5,#16d5e6)}
+.dialog-body{padding:22px 22px 18px}
+.dialog-brand{font-size:11px;letter-spacing:2px;font-weight:900;color:#16d5e6;text-transform:uppercase;margin-bottom:10px}
+.dialog-title{font-size:20px;font-weight:900;margin:0 0 9px;color:#f7f7fb}
+.dialog-message{font-size:15px;line-height:1.5;color:#a7acbd;margin:0}
+.dialog-actions{display:flex;gap:10px;padding:0 22px 20px;justify-content:flex-end}
+.dialog-btn{border:0;border-radius:12px;padding:12px 18px;font-weight:900;font-size:13px;cursor:pointer}
+.dialog-btn.cancel{background:#2a2e3d;color:#fff}
+.dialog-btn.confirm{background:linear-gradient(90deg,#9a43ff,#657cf5,#16d5e6);color:#090a10}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="../../index.html">← MESSLIFE</a>
+    <div class="brand">RIESGOS</div>
+  </div>
+  <h1>Control de riesgos</h1>
+  <div class="sub">Registra el riesgo asumido por cada jugador durante la carrera.</div>
+
+  <section class="panel" id="overview">
+    <h2>Progreso de riesgos</h2>
+    <div id="playerList" class="players">
+      <div class="empty">Aún no hay jugadores registrados.</div>
+    </div>
+  </section>
+
+  <section class="panel detail" id="detail">
+    <div class="detail-head">
+      <div>
+        <h2 id="detailName">Jugador</h2>
+        <div class="helper" id="detailStatus"></div>
+      </div>
+      <button class="back-detail" id="backOverview">← VOLVER</button>
+    </div>
+
+    <div class="risk-options" id="riskOptions"></div>
+
+    <div class="shared" id="sharedBox">
+      <div class="shared-head">
+        <div>
+          <div class="shared-label">RIESGO ACUMULADO</div>
+          <div class="limit">Máximo permitido: 5 puntos</div>
+        </div>
+        <div class="shared-value" id="totalValue">0 / 5</div>
+      </div>
+      <div class="circles" id="circles"></div>
+      <div class="selected" id="selectedInfo">Selecciona un tipo de riesgo para registrar un punto.</div>
+    </div>
+
+    <button class="secondary reset" id="resetPlayer">REINICIAR PUNTOS</button>
+  </section>
+
+  <section class="panel">
+    <button class="secondary reset" id="resetAll">REINICIAR RIESGOS</button>
+  </section>
+</div>
+
+<script>
+
+function messlifeLocked(){
+  return localStorage.getItem('messlife_locked')==='1';
+}
+function blockResetIfLocked(){
+  if(messlifeLocked()){
+    alert('Los datos están bloqueados. Desbloquéalos desde la página principal para poder reiniciar información.');
+    return true;
+  }
+  return false;
+}
+const RISK_TYPES=[
+  {id:'contra',name:'Calle contra el tránsito',value:1,icon:'🚲'},
+  {id:'peatonal',name:'Calle peatonal',value:1,icon:'🚶'},
+  {id:'semaforo',name:'Semáforo',value:2,icon:'🚦'}
+];
+let players=[];
+let selectedPlayer=null;
+const $=id=>document.getElementById(id);
+function totalRisk(p){return RISK_TYPES.reduce((sum,t)=>sum+(p.risks[t.id]||0)*t.value,0)}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function riskClass(total){if(total>5)return'penalty';if(total>=4)return'warn';return'safe'}
+function loadCentralPlayers(){
+  let names=[];
+  try{names=JSON.parse(localStorage.getItem('messlife_players')||'[]')||[]}catch(e){names=[]}
+  let old=[];
+  try{old=JSON.parse(localStorage.getItem('messlife_risks')||'[]')||[]}catch(e){old=[]}
+  const oldByName=new Map(old.map(p=>[String(p.name).toLowerCase(),p]));
+  players=names.map(name=>{
+    const prev=oldByName.get(String(name).toLowerCase());
+    return prev?{name,risks:{contra:+(prev.risks?.contra||0),peatonal:+(prev.risks?.peatonal||0),semaforo:+(prev.risks?.semaforo||0)}}:
+      {name,risks:{contra:0,peatonal:0,semaforo:0}};
+  });
+  save();
+}
+function renderPlayers(){
+  const list=$('playerList');
+  if(!players.length){list.innerHTML='<div class="empty">Aún no hay jugadores registrados.</div>';return}
+  list.innerHTML=players.map((p,i)=>{
+    const total=totalRisk(p),pct=Math.min(total/5*100,100),cls=riskClass(total);
+    const label=total>5?'PENALIZADO':`${total} / 5`;
+    return `<div class="player" data-index="${i}">
+      <div class="player-head"><div class="player-name">${escapeHtml(p.name)}</div><div class="score ${cls}">${label}</div></div>
+      <div class="bar"><div class="fill" style="width:${pct}%"></div></div>
+      <div class="player-foot"><span>Riesgo acumulado</span><span>${total>5?`+${total-5} sobre el límite`:`${5-total} disponibles`}</span></div>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.player').forEach(el=>el.addEventListener('click',()=>openPlayer(+el.dataset.index)));
+}
+function renderRiskOptions(){
+  const p=players[selectedPlayer];
+  $('riskOptions').innerHTML=RISK_TYPES.map(t=>{
+    const count=p.risks[t.id]||0;
+    return `<button class="risk-option ${count>0?'active':''}" data-type="${t.id}">
+      <span class="risk-icon">${t.icon}</span><span class="risk-name">${t.name}</span>
+      <span class="risk-points">${t.value} ${t.value===1?'riesgo':'riesgos'} · registrados: ${count}</span>
+    </button>`;
+  }).join('');
+  $('riskOptions').querySelectorAll('.risk-option').forEach(btn=>btn.addEventListener('click',()=>toggleRisk(btn.dataset.type)));
+}
+function renderDetail(){
+  if(selectedPlayer===null)return;
+  const p=players[selectedPlayer],total=totalRisk(p);
+  $('detailName').textContent=p.name;
+  $('detailStatus').textContent=total>5?'Superó el máximo de 5 puntos y queda penalizado.':`Le quedan ${5-total} puntos antes de ser penalizado.`;
+  $('totalValue').textContent=`${total} / 5`;
+  $('sharedBox').classList.toggle('penalty',total>5);
+  $('circles').innerHTML=Array.from({length:5},(_,i)=>`<button class="risk-circle ${i<Math.min(total,5)?'active':''}" aria-hidden="true"></button>`).join('');
+  const events=[];RISK_TYPES.forEach(t=>{const count=p.risks[t.id]||0;if(count)events.push(`${t.name}: ${count}`)});
+  $('selectedInfo').textContent=events.length?events.join(' · '):'Selecciona un tipo de riesgo para registrar un punto.';
+  renderRiskOptions();
+}
+function toggleRisk(typeId){
+  const p=players[selectedPlayer],t=RISK_TYPES.find(x=>x.id===typeId);
+  p.risks[typeId]=(p.risks[typeId]||0)+1;
+  save();renderDetail();renderPlayers();
+}
+function openPlayer(i){selectedPlayer=i;$('overview').style.display='none';$('detail').classList.add('active');renderDetail()}
+function save(){localStorage.setItem('messlife_risks',JSON.stringify(players))}
+$('backOverview').addEventListener('click',()=>{selectedPlayer=null;$('detail').classList.remove('active');$('overview').style.display='block';renderPlayers()});
+$('resetPlayer').addEventListener('click',()=>{
+  if(selectedPlayer===null)return;
+  players[selectedPlayer].risks={contra:0,peatonal:0,semaforo:0};
+  save();renderDetail();renderPlayers();
+});
+$('resetAll').addEventListener('click',async()=>{
+  if(blockResetIfLocked())return;
+  const confirmed=await confirm('¿Reiniciar todos los riesgos? La lista de jugadores se mantiene en Jugadores.');
+  if(!confirmed)return;
+  players=players.map(p=>({name:p.name,risks:{contra:0,peatonal:0,semaforo:0}}));
+  selectedPlayer=null;$('detail').classList.remove('active');$('overview').style.display='block';
+  renderPlayers();save();
+});
+loadCentralPlayers();renderPlayers();
+</script>
+
+<div class="dialog-backdrop" id="messlifeDialog" aria-hidden="true">
+  <div class="dialog" role="dialog" aria-modal="true">
+    <div class="dialog-accent"></div>
+    <div class="dialog-body">
+      <div class="dialog-brand">MESSLIFE</div>
+      <h3 class="dialog-title" id="messlifeDialogTitle">Aviso</h3>
+      <p class="dialog-message" id="messlifeDialogMessage"></p>
+    </div>
+    <div class="dialog-actions" id="messlifeDialogActions"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const backdrop=document.getElementById('messlifeDialog');
+  if(!backdrop)return;
+  const title=document.getElementById('messlifeDialogTitle');
+  const message=document.getElementById('messlifeDialogMessage');
+  const actions=document.getElementById('messlifeDialogActions');
+  let resolver=null;
+  function close(value){
+    backdrop.classList.remove('show');
+    backdrop.setAttribute('aria-hidden','true');
+    if(resolver){const r=resolver;resolver=null;r(value);}
+  }
+  window.messlifeDialog=function(opts){
+    opts=opts||{};
+    title.textContent=opts.title||'Aviso';
+    message.textContent=opts.message||'';
+    actions.innerHTML='';
+    if(opts.confirm){
+      const cancel=document.createElement('button');
+      cancel.className='dialog-btn cancel';
+      cancel.textContent=opts.cancelText||'CANCELAR';
+      cancel.onclick=()=>close(false);
+      const ok=document.createElement('button');
+      ok.className='dialog-btn confirm';
+      ok.textContent=opts.confirmText||'ACEPTAR';
+      ok.onclick=()=>close(true);
+      actions.append(cancel,ok);
+      backdrop.onclick=e=>{if(e.target===backdrop)close(false)};
+      backdrop.onkeydown=e=>{if(e.key==='Escape')close(false)};
+      backdrop.tabIndex=-1;
+      backdrop.focus();
+      backdrop.classList.add('show');
+      backdrop.setAttribute('aria-hidden','false');
+      return new Promise(r=>resolver=r);
+    }
+    const ok=document.createElement('button');
+    ok.className='dialog-btn confirm';
+    ok.textContent=opts.okText||'ACEPTAR';
+    ok.onclick=()=>close(true);
+    actions.append(ok);
+    backdrop.onclick=e=>{if(e.target===backdrop)close(true)};
+    backdrop.classList.add('show');
+    backdrop.setAttribute('aria-hidden','false');
+    return new Promise(r=>resolver=r);
+  };
+  window.alert=function(msg){
+    return messlifeDialog({title:'Aviso',message:String(msg),okText:'ACEPTAR'});
+  };
+  window.confirm=function(msg){
+    return messlifeDialog({title:'Confirmar',message:String(msg),confirm:true,confirmText:'CONFIRMAR'});
+  };
+})();
+</script></body>
+</html>

@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MESSLIFE — Dados</title>
+<style>
+:root{
+  --bg:#080b12;--panel:#101521;--panel2:#151c2b;--text:#f8f9ff;--muted:#8e99b1;
+  --line:#26334a;--purple:#9a43ff;--cyan:#16d5e6;--glow:rgba(22,213,230,.35)
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:
+  radial-gradient(circle at 50% 27%,rgba(92,58,180,.18),transparent 34%),
+  radial-gradient(circle at 50% 70%,rgba(22,213,230,.08),transparent 35%),
+  var(--bg);
+  color:var(--text);font-family:Arial,Helvetica,sans-serif
+}
+.wrap{max-width:900px;margin:auto;padding:14px 16px 44px}
+.top{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding:4px 0 12px}
+.back{color:#fff;text-decoration:none;font-weight:900;font-size:14px;letter-spacing:.5px}
+.brand{font-weight:900;letter-spacing:2px;font-size:17px}
+.brand span{color:var(--cyan)}
+.help{width:32px;height:32px;border:1px solid var(--line);border-radius:50%;background:transparent;color:#fff;font-weight:900}
+.stage{
+  position:relative;min-height:380px;display:flex;align-items:center;justify-content:center;
+  overflow:hidden
+}
+.stage:before{
+  content:"";position:absolute;width:320px;height:320px;border-radius:50%;
+  background:radial-gradient(circle,rgba(22,213,230,.16),transparent 62%);
+  filter:blur(4px)
+}
+.hud{position:absolute;top:22px;left:0;border:1px solid var(--purple);border-radius:15px;padding:13px 16px;background:rgba(16,21,33,.86);min-width:150px}
+.hud-label,.result-label{font-size:11px;color:var(--cyan);font-weight:900;letter-spacing:1px;text-transform:uppercase}
+.hud-value{font-size:25px;font-weight:900;margin-top:5px}
+.result-box{position:absolute;top:22px;right:0;text-align:right;border:1px solid var(--cyan);border-radius:15px;padding:13px 16px;background:rgba(16,21,33,.86);min-width:150px}
+.result-value{font-size:54px;line-height:1;font-weight:900;color:#fff;text-shadow:0 0 18px var(--glow);margin-top:4px}
+.die-wrap{position:relative;width:190px;height:190px;display:flex;align-items:center;justify-content:center}
+.die-glow{position:absolute;inset:22px;border-radius:30px;background:linear-gradient(135deg,rgba(154,67,255,.24),rgba(22,213,230,.22));filter:blur(22px)}
+.die{
+  position:relative;width:150px;height:150px;
+  background:transparent;border:0;box-shadow:none;
+  transform:none;display:block;perspective:700px;
+}
+.cube{
+  position:absolute;inset:0;width:150px;height:150px;
+  transform-style:preserve-3d;
+  transform:rotateX(-16deg) rotateY(-32deg);
+}
+.face{
+  position:absolute;width:150px;height:150px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,rgba(20,29,48,.97),rgba(6,11,20,.98));
+  border:2px solid rgba(22,213,230,.8);
+  box-shadow:inset 0 0 28px rgba(154,67,255,.14),0 0 18px rgba(22,213,230,.22);
+  border-radius:22px;backface-visibility:hidden;
+}
+.face-number{
+  font-size:64px;font-weight:900;color:#fff;
+  text-shadow:0 0 15px rgba(22,213,230,.8),0 0 25px rgba(154,67,255,.5);
+}
+.face.front{transform:translateZ(75px)}
+.face.right{transform:rotateY(90deg) translateZ(75px)}
+.face.top{transform:rotateX(90deg) translateZ(75px)}
+.face.back{transform:rotateY(180deg) translateZ(75px)}
+.face.left{transform:rotateY(-90deg) translateZ(75px)}
+.face.bottom{transform:rotateX(-90deg) translateZ(75px)}
+.die.rolling .face-number{animation:numberFlicker 85ms steps(2,end) infinite}
+@keyframes numberFlicker{
+  0%{opacity:.35;transform:scale(.94)}
+  50%{opacity:1;transform:scale(1.03)}
+  100%{opacity:.55;transform:scale(.97)}
+}
+.tap{position:absolute;left:0;top:155px;color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:1px}
+.platform{position:absolute;bottom:28px;width:310px;height:54px;border-radius:50%;border:1px solid rgba(22,213,230,.6);box-shadow:0 0 25px rgba(22,213,230,.25),inset 0 0 25px rgba(154,67,255,.12)}
+.launch-flash{position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 52%,rgba(22,213,230,.18),transparent 23%);opacity:0}
+.launch-flash.active{animation:flash 1.05s ease-out}
+@keyframes flash{
+  0%{opacity:0;transform:scale(.75)}
+  28%{opacity:.8}
+  60%{opacity:.2;transform:scale(1.2)}
+  100%{opacity:0;transform:scale(1.45)}
+}
+.platform:before,.platform:after{content:"";position:absolute;border-radius:50%;inset:9px 35px;border:1px solid rgba(154,67,255,.5)}
+.platform:after{inset:17px 72px;border-color:rgba(22,213,230,.6)}
+.platform.active{animation:platformPulse 1.05s ease-out}
+.platform.active:before{animation:ringExpand 1.05s ease-out}
+.platform.active:after{animation:ringExpand2 1.05s ease-out}
+@keyframes platformPulse{
+  0%,100%{opacity:.65;transform:scaleX(1)}
+  25%{opacity:1;transform:scaleX(1.08)}
+  65%{opacity:.9;transform:scaleX(1.02)}
+}
+@keyframes ringExpand{
+  0%{transform:scale(.55);opacity:1}
+  100%{transform:scale(1.7);opacity:0}
+}
+@keyframes ringExpand2{
+  0%{transform:scale(.4);opacity:1}
+  100%{transform:scale(2);opacity:0}
+}
+.select-title{text-align:center;color:var(--muted);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:9px}
+.dice-select{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.die-btn{
+  min-height:68px;border:1px solid var(--line);border-radius:12px;background:rgba(16,21,33,.8);color:#fff;
+  font-weight:900;font-size:14px;cursor:pointer
+}
+.die-btn .shape{display:block;font-size:19px;color:#c7cde0;margin-bottom:3px}
+.die-btn.selected{border-color:var(--purple);box-shadow:0 0 0 1px var(--purple) inset,0 0 15px rgba(154,67,255,.18);color:#fff}
+.die-btn.selected .shape{color:var(--cyan)}
+.launch{
+  width:100%;margin:13px 0 18px;padding:16px;border:0;border-radius:14px;
+  background:linear-gradient(90deg,var(--purple),#657cf5,var(--cyan));color:#080a10;
+  font-weight:900;font-size:19px;letter-spacing:1px;cursor:pointer
+}
+.launch:active{transform:scale(.99)}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:17px}
+.info{border:1px solid var(--line);border-radius:12px;background:rgba(16,21,33,.7);padding:11px 13px}
+.info span{display:block;color:var(--muted);font-size:10px;letter-spacing:1px;text-transform:uppercase}
+.info strong{display:block;margin-top:4px;font-size:14px}
+.history-head{display:flex;align-items:center;justify-content:space-between;margin:6px 0 10px}
+.history-title{color:var(--cyan);font-weight:900;letter-spacing:1.4px;font-size:12px}
+.clear{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:9px;padding:6px 9px;font-size:10px;font-weight:800}
+.history{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.history-item{border:1px solid var(--line);border-radius:11px;padding:9px 6px;text-align:center;background:rgba(16,21,33,.72)}
+.history-item .h-die{font-size:10px;color:#c6cce0}
+.history-item .h-result{font-size:28px;font-weight:900;color:#b36dff;margin:4px 0}
+.history-item .h-time{font-size:9px;color:var(--muted)}
+.empty{color:var(--muted);font-size:12px;border:1px dashed var(--line);border-radius:11px;padding:18px;text-align:center;grid-column:1/-1}
+@media(max-width:650px){
+  .wrap{padding-left:12px;padding-right:12px}
+  .stage{min-height:350px}
+  .hud,.result-box{top:14px;min-width:118px;padding:10px 11px}.hud{left:0}.result-box{right:0}
+  .hud-value{font-size:21px}.result-value{font-size:43px}
+  .die-wrap{transform:scale(.86)}
+  .tap{top:143px}
+  .dice-select{grid-template-columns:repeat(3,1fr)}
+  .history{grid-template-columns:repeat(3,1fr)}
+}
+
+.dialog-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.66);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
+.dialog-backdrop.show{display:flex}
+.dialog{width:min(100%,430px);background:#20232e;border:1px solid #34394d;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 0 1px rgba(154,67,255,.12) inset;overflow:hidden}
+.dialog-accent{height:4px;background:linear-gradient(90deg,#9a43ff,#657cf5,#16d5e6)}
+.dialog-body{padding:22px 22px 18px}
+.dialog-brand{font-size:11px;letter-spacing:2px;font-weight:900;color:#16d5e6;text-transform:uppercase;margin-bottom:10px}
+.dialog-title{font-size:20px;font-weight:900;margin:0 0 9px;color:#f7f7fb}
+.dialog-message{font-size:15px;line-height:1.5;color:#a7acbd;margin:0}
+.dialog-actions{display:flex;gap:10px;padding:0 22px 20px;justify-content:flex-end}
+.dialog-btn{border:0;border-radius:12px;padding:12px 18px;font-weight:900;font-size:13px;cursor:pointer}
+.dialog-btn.cancel{background:#2a2e3d;color:#fff}
+.dialog-btn.confirm{background:linear-gradient(90deg,#9a43ff,#657cf5,#16d5e6);color:#090a10}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="../../index.html">← MESSLIFE</a>
+    <div class="brand">MESSLIFE <span>| DADOS</span></div>
+    <button class="help" id="help" aria-label="Ayuda">?</button>
+  </div>
+
+  <section class="stage" aria-label="Lanzador de dados">
+    <div class="hud">
+      <div class="hud-label">Dado seleccionado</div>
+      <div class="hud-value" id="selectedDie">D6</div>
+    </div>
+    <div class="result-box" aria-live="polite">
+      <div class="result-label">Resultado</div>
+      <div class="result-value" id="result">—</div>
+    </div>
+    <div class="die-wrap">
+      <div class="die-glow"></div>
+      <div class="die" id="die" aria-label="Dado holográfico">
+  <div class="cube">
+    <div class="face front"><span class="face-number">6</span></div>
+    <div class="face right"><span class="face-number">3</span></div>
+    <div class="face top"><span class="face-number">2</span></div>
+    <div class="face back"><span class="face-number">1</span></div>
+    <div class="face left"><span class="face-number">5</span></div>
+    <div class="face bottom"><span class="face-number">4</span></div>
+  </div>
+</div>
+      <div class="tap">TOCA PARA LANZAR</div>
+    </div>
+    <div class="platform" id="platform"></div>
+    <div class="launch-flash" id="launchFlash"></div>
+  </section>
+
+  <div class="select-title">Selecciona tu dado</div>
+  <div class="dice-select" id="diceSelect"></div>
+
+  <button class="launch" id="launch">⚡ LANZAR DADO ⚡</button>
+
+  <div class="info-grid">
+    <div class="info"><span>Aleatorio</span><strong>100%</strong></div>
+    <div class="info"><span>Máximo</span><strong id="maxInfo">6</strong></div>
+  </div>
+
+  <div class="history-head">
+    <div class="history-title">HISTORIAL DE LANZAMIENTOS</div>
+    <button class="clear" id="clearHistory">LIMPIAR</button>
+  </div>
+  <div class="history" id="history"></div>
+</div>
+
+<script>
+
+function messlifeLocked(){
+  return localStorage.getItem('messlife_locked')==='1';
+}
+function blockResetIfLocked(){
+  if(messlifeLocked()){
+    alert('Los datos están bloqueados. Desbloquéalos desde la página principal para poder reiniciar información.');
+    return true;
+  }
+  return false;
+}
+const dice=[4,6,8,10,12,20];
+let sides=6;
+let history=[];
+function saveDiceState(){
+  try{localStorage.setItem('messlife_dice',JSON.stringify({sides,history}))}catch(e){}
+}
+function loadDiceState(){
+  try{
+    const d=JSON.parse(localStorage.getItem('messlife_dice')||'null');
+    if(!d)return;
+    if([4,6,8,10,12,20].includes(Number(d.sides))) sides=Number(d.sides);
+    if(Array.isArray(d.history)) history=d.history;
+  }catch(e){}
+}
+const $=id=>document.getElementById(id);
+
+function nowTime(){
+  return new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
+function renderDice(){
+  $('diceSelect').innerHTML=dice.map(d=>`
+    <button class="die-btn ${d===sides?'selected':''}" data-sides="${d}">
+      <span class="shape">${d===4?'△':d===6?'◇':d===8?'◆':d===10?'⬡':d===12?'⬢':'⬣'}</span>
+      D${d}
+    </button>`).join('');
+  document.querySelectorAll('.die-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      sides=Number(btn.dataset.sides);
+      $('selectedDie').textContent=`D${sides}`;
+      $('maxInfo').textContent=sides;
+      $('result').textContent='—';
+      updateCubeNumbers(sides===6?6:1);
+      renderDice();saveDiceState();
+    });
+  });
+}
+function renderHistory(){
+  const box=$('history');
+  if(!history.length){
+    box.innerHTML='<div class="empty">Todavía no hay lanzamientos.</div>';
+    return;
+  }
+  box.innerHTML=history.slice(0,10).map(x=>`
+    <div class="history-item">
+      <div class="h-die">D${x.sides}</div>
+      <div class="h-result">${x.result}</div>
+      <div class="h-time">${x.time}</div>
+    </div>`).join('');
+}
+function updateCubeNumbers(base){
+  const vals=[];
+  for(let i=0;i<6;i++) vals.push(((base+i-1)%sides)+1);
+  document.querySelectorAll('.face-number').forEach((el,i)=>el.textContent=vals[i]);
+}
+function roll(){
+  // The real random result is decided once, before the visual effect.
+  const value=Math.floor(Math.random()*sides)+1;
+  const die=$('die'), platform=$('platform'), flash=$('launchFlash');
+
+  die.classList.remove('rolling');
+  platform.classList.remove('active');
+  flash.classList.remove('active');
+  void die.offsetWidth; void platform.offsetWidth; void flash.offsetWidth;
+
+  die.classList.add('rolling');
+  platform.classList.add('active');
+  flash.classList.add('active');
+  $('result').textContent='…';
+
+  // The cube stays completely still. Only the numbers change.
+  const started=performance.now(), duration=1100;
+  const timer=setInterval(()=>{
+    if(performance.now()-started>=duration){
+      clearInterval(timer);
+      updateCubeNumbers(value);
+      return;
+    }
+    updateCubeNumbers(Math.floor(Math.random()*sides)+1);
+  },85);
+
+  setTimeout(()=>{
+    clearInterval(timer);
+    updateCubeNumbers(value);
+    $('result').textContent=value;
+    die.classList.remove('rolling');
+    platform.classList.remove('active');
+    flash.classList.remove('active');
+    history.unshift({sides,result:value,time:nowTime()});
+    history=history.slice(0,20);
+    renderHistory();saveDiceState();
+  },duration);
+}
+$('launch').addEventListener('click',roll);
+$('die').addEventListener('click',roll);
+$('clearHistory').addEventListener('click',()=>{
+  if(blockResetIfLocked())return;
+  history=[];renderHistory();saveDiceState();
+});
+$('help').addEventListener('click',()=>{
+  alert('Selecciona un dado y pulsa LANZAR DADO. Los resultados son generados aleatoriamente. D6 es el dado predeterminado.');
+});
+loadDiceState();
+$('selectedDie').textContent=`D${sides}`;
+$('maxInfo').textContent=sides;
+updateCubeNumbers(sides===6?6:1);
+renderDice();renderHistory();
+</script>
+
+<div class="dialog-backdrop" id="messlifeDialog" aria-hidden="true">
+  <div class="dialog" role="dialog" aria-modal="true">
+    <div class="dialog-accent"></div>
+    <div class="dialog-body">
+      <div class="dialog-brand">MESSLIFE</div>
+      <h3 class="dialog-title" id="messlifeDialogTitle">Aviso</h3>
+      <p class="dialog-message" id="messlifeDialogMessage"></p>
+    </div>
+    <div class="dialog-actions" id="messlifeDialogActions"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const backdrop=document.getElementById('messlifeDialog');
+  if(!backdrop)return;
+  const title=document.getElementById('messlifeDialogTitle');
+  const message=document.getElementById('messlifeDialogMessage');
+  const actions=document.getElementById('messlifeDialogActions');
+  let resolver=null;
+  function close(value){
+    backdrop.classList.remove('show');
+    backdrop.setAttribute('aria-hidden','true');
+    if(resolver){const r=resolver;resolver=null;r(value);}
+  }
+  window.messlifeDialog=function(opts){
+    opts=opts||{};
+    title.textContent=opts.title||'Aviso';
+    message.textContent=opts.message||'';
+    actions.innerHTML='';
+    if(opts.confirm){
+      const cancel=document.createElement('button');
+      cancel.className='dialog-btn cancel';
+      cancel.textContent=opts.cancelText||'CANCELAR';
+      cancel.onclick=()=>close(false);
+      const ok=document.createElement('button');
+      ok.className='dialog-btn confirm';
+      ok.textContent=opts.confirmText||'ACEPTAR';
+      ok.onclick=()=>close(true);
+      actions.append(cancel,ok);
+      backdrop.onclick=e=>{if(e.target===backdrop)close(false)};
+      backdrop.onkeydown=e=>{if(e.key==='Escape')close(false)};
+      backdrop.tabIndex=-1;
+      backdrop.focus();
+      backdrop.classList.add('show');
+      backdrop.setAttribute('aria-hidden','false');
+      return new Promise(r=>resolver=r);
+    }
+    const ok=document.createElement('button');
+    ok.className='dialog-btn confirm';
+    ok.textContent=opts.okText||'ACEPTAR';
+    ok.onclick=()=>close(true);
+    actions.append(ok);
+    backdrop.onclick=e=>{if(e.target===backdrop)close(true)};
+    backdrop.classList.add('show');
+    backdrop.setAttribute('aria-hidden','false');
+    return new Promise(r=>resolver=r);
+  };
+  window.alert=function(msg){
+    return messlifeDialog({title:'Aviso',message:String(msg),okText:'ACEPTAR'});
+  };
+  window.confirm=function(msg){
+    return messlifeDialog({title:'Confirmar',message:String(msg),confirm:true,confirmText:'CONFIRMAR'});
+  };
+})();
+</script></body>
+</html>

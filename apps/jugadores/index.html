@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MESSLIFE — Jugadores</title>
+<style>
+:root{--bg:#0d0f16;--p:#171a25;--p2:#222638;--t:#fff;--m:#a8adbf;--line:#363b4e;--purple:#9a43ff;--cyan:#16d5e6;--danger:#ff536d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--t);font-family:Arial,Helvetica,sans-serif}
+.wrap{max-width:760px;margin:auto;padding:18px 14px 48px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.back{color:#fff;text-decoration:none;background:var(--p2);border:1px solid var(--line);border-radius:11px;padding:9px 12px;font-weight:800;font-size:12px}
+.brand{font-weight:900;letter-spacing:3px;color:var(--cyan);font-size:18px}
+h1{font-size:28px;margin:8px 0 4px}.sub{color:var(--m);font-size:14px;margin-bottom:18px}
+.panel{background:var(--p);border:1px solid var(--line);border-radius:20px;padding:16px;margin:11px 0}
+.panel h2{margin:0 0 12px;font-size:17px}
+.add{display:grid;grid-template-columns:1fr 170px;gap:9px}
+input{width:100%;background:#0f121a;color:#fff;border:1px solid #42475b;border-radius:10px;padding:12px;font-size:15px}
+button{border:0;border-radius:12px;padding:12px 13px;font-weight:900;cursor:pointer;font-size:13px}
+.primary{background:linear-gradient(90deg,var(--purple),#657cf5,var(--cyan));color:#080910}
+.secondary{background:var(--p2);color:#fff}
+.status{color:var(--m);font-size:12px;margin-top:8px;min-height:16px}
+.players{display:flex;flex-direction:column;gap:8px}
+.player{cursor:grab;background:var(--p2);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:grab;user-select:none;touch-action:none}
+.player.dragging{opacity:.45;transform:scale(.99)}
+.player.drop-target{border-color:var(--cyan);box-shadow:0 0 0 2px rgba(22,213,230,.18) inset}
+.drag-handle{color:var(--m);font-size:18px;line-height:1}
+.number{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--purple),var(--cyan));color:#080910;font-weight:900}
+.name{font-size:15px;font-weight:800}
+.empty{color:var(--m);font-size:13px}
+.reset{width:100%;margin-top:10px;background:#2a2e3f;color:#fff}
+.note{color:var(--m);font-size:12px;line-height:1.45;margin-top:10px}
+@media(max-width:600px){.add{grid-template-columns:1fr}.add button{width:100%}}
+
+.dialog-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.66);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
+.dialog-backdrop.show{display:flex}
+.dialog{width:min(100%,430px);background:#20232e;border:1px solid #34394d;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 0 1px rgba(154,67,255,.12) inset;overflow:hidden}
+.dialog-accent{height:4px;background:linear-gradient(90deg,#9a43ff,#657cf5,#16d5e6)}
+.dialog-body{padding:22px 22px 18px}
+.dialog-brand{font-size:11px;letter-spacing:2px;font-weight:900;color:#16d5e6;text-transform:uppercase;margin-bottom:10px}
+.dialog-title{font-size:20px;font-weight:900;margin:0 0 9px;color:#f7f7fb}
+.dialog-message{font-size:15px;line-height:1.5;color:#a7acbd;margin:0}
+.dialog-actions{display:flex;gap:10px;padding:0 22px 20px;justify-content:flex-end}
+.dialog-btn{border:0;border-radius:12px;padding:12px 18px;font-weight:900;font-size:13px;cursor:pointer}
+.dialog-btn.cancel{background:#2a2e3d;color:#fff}
+.dialog-btn.confirm{background:linear-gradient(90deg,#9a43ff,#657cf5,#16d5e6);color:#090a10}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="../../index.html">← MESSLIFE</a>
+    <div class="brand">JUGADORES</div>
+  </div>
+  <h1>Registro de jugadores</h1>
+  <div class="sub">Agrega los participantes una sola vez. Las mini apps que los necesitan los tomarán automáticamente.</div>
+
+  <section class="panel">
+    <h2>Agregar jugador</h2>
+    <div class="add">
+      <input id="playerName" placeholder="Nombre del jugador">
+      <button class="primary" id="addPlayer">AGREGAR JUGADOR</button>
+    </div>
+    <div class="status" id="status"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Jugadores registrados <span id="count">(0)</span></h2>
+    <div id="list" class="players"><div class="empty">Aún no hay jugadores registrados.</div></div>
+  </section>
+
+  <section class="panel">
+    <button class="reset" id="reset">REINICIAR JUGADORES</button>
+    <div class="note">Arrastra los jugadores para cambiar el orden. Ese orden se refleja automáticamente en las mini apps que usan jugadores.</div>
+  </section>
+</div>
+
+<script>
+
+function messlifeLocked(){
+  return localStorage.getItem('messlife_locked')==='1';
+}
+function blockResetIfLocked(){
+  if(messlifeLocked()){
+    alert('Los datos están bloqueados. Desbloquéalos desde la página principal para poder reiniciar información.');
+    return true;
+  }
+  return false;
+}
+const KEY='messlife_players';
+const $=id=>document.getElementById(id);
+let players=[];
+
+function save(){localStorage.setItem(KEY,JSON.stringify(players))}
+function load(){
+  try{players=JSON.parse(localStorage.getItem(KEY)||'[]')||[]}catch(e){players=[]}
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function render(){
+  $('count').textContent=`(${players.length})`;
+  $('list').innerHTML=players.length
+    ? players.map((p,i)=>`<div class="player" draggable="true" data-index="${i}">
+        <div class="drag-handle" aria-hidden="true">☷</div>
+        <div class="number">${i+1}</div>
+        <div class="name">${escapeHtml(p)}</div>
+      </div>`).join('')
+    : '<div class="empty">Aún no hay jugadores registrados.</div>';
+  bindDrag();
+}
+function persistOrder(){
+  save();
+  // The central list is the source of truth. Risks and Manifesto
+  // rebuild their visible order from this list when opened.
+  window.dispatchEvent(new Event('messlifePlayersChanged'));
+}
+function movePlayer(from,to){
+  if(from===to || from<0 || to<0 || from>=players.length || to>=players.length)return;
+  const [item]=players.splice(from,1);
+  players.splice(to,0,item);
+  persistOrder();
+  render();
+}
+function bindDrag(){
+  const list=$('list');
+  list.querySelectorAll('.player').forEach(el=>{
+    el.addEventListener('dragstart',e=>{
+      if(messlifeLocked()){e.preventDefault();return}
+      e.dataTransfer.effectAllowed='move';
+      e.dataTransfer.setData('text/plain',el.dataset.index);
+      el.classList.add('dragging');
+    });
+    el.addEventListener('dragend',()=>{
+      el.classList.remove('dragging');
+      list.querySelectorAll('.drop-target').forEach(x=>x.classList.remove('drop-target'));
+    });
+    el.addEventListener('dragover',e=>{
+      if(messlifeLocked())return;
+      e.preventDefault();
+      el.classList.add('drop-target');
+    });
+    el.addEventListener('dragleave',()=>el.classList.remove('drop-target'));
+    el.addEventListener('drop',e=>{
+      if(messlifeLocked())return;
+      e.preventDefault();
+      const from=Number(e.dataTransfer.getData('text/plain'));
+      const to=Number(el.dataset.index);
+      el.classList.remove('drop-target');
+      movePlayer(from,to);
+    });
+
+    // Touch/pointer drag for phones.
+    let touchFrom=null;
+    el.addEventListener('pointerdown',e=>{
+      if(messlifeLocked() || e.pointerType==='mouse')return;
+      touchFrom=Number(el.dataset.index);
+      el.setPointerCapture?.(e.pointerId);
+      el.classList.add('dragging');
+    });
+    el.addEventListener('pointermove',e=>{
+      if(touchFrom===null)return;
+      const target=document.elementFromPoint(e.clientX,e.clientY)?.closest('.player');
+      list.querySelectorAll('.drop-target').forEach(x=>x.classList.remove('drop-target'));
+      if(target && target!==el)target.classList.add('drop-target');
+    });
+    el.addEventListener('pointerup',e=>{
+      if(touchFrom===null)return;
+      const target=document.elementFromPoint(e.clientX,e.clientY)?.closest('.player');
+      const to=target?Number(target.dataset.index):touchFrom;
+      el.classList.remove('dragging');
+      list.querySelectorAll('.drop-target').forEach(x=>x.classList.remove('drop-target'));
+      touchFrom=null;
+      if(to!==Number(el.dataset.index))movePlayer(Number(el.dataset.index),to);
+    });
+    el.addEventListener('pointercancel',()=>{
+      touchFrom=null;el.classList.remove('dragging');
+      list.querySelectorAll('.drop-target').forEach(x=>x.classList.remove('drop-target'));
+    });
+  });
+}
+
+function add(){
+  const name=$('playerName').value.trim();
+  if(!name){$('status').textContent='Escribe el nombre del jugador.';return}
+  if(players.some(p=>p.toLowerCase()===name.toLowerCase())){
+    $('status').textContent='Ese jugador ya está registrado.';return
+  }
+  players.push(name);
+  save();
+  $('playerName').value='';
+  $('status').textContent='Jugador agregado.';
+  render();
+}
+$('addPlayer').addEventListener('click',add);
+$('playerName').addEventListener('keydown',e=>{if(e.key==='Enter')add()});
+$('reset').addEventListener('click',async()=>{
+  if(blockResetIfLocked())return;
+  const confirmed=await confirm('¿Reiniciar la lista central de jugadores? Esto también eliminará sus registros en Riesgos y Manifiesto.');
+  if(!confirmed)return;
+  players=[];
+  localStorage.removeItem(KEY);
+  localStorage.removeItem('messlife_risks');
+  try{
+    const manifest=JSON.parse(localStorage.getItem('messlife_manifest')||'null');
+    if(manifest){
+      manifest.players=[];
+      localStorage.setItem('messlife_manifest',JSON.stringify(manifest));
+    }
+  }catch(e){}
+  $('status').textContent='Jugadores reiniciados. Los checkpoints de la carrera se mantienen.';
+  render();
+});
+load();render();
+</script>
+
+<div class="dialog-backdrop" id="messlifeDialog" aria-hidden="true">
+  <div class="dialog" role="dialog" aria-modal="true">
+    <div class="dialog-accent"></div>
+    <div class="dialog-body">
+      <div class="dialog-brand">MESSLIFE</div>
+      <h3 class="dialog-title" id="messlifeDialogTitle">Aviso</h3>
+      <p class="dialog-message" id="messlifeDialogMessage"></p>
+    </div>
+    <div class="dialog-actions" id="messlifeDialogActions"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const backdrop=document.getElementById('messlifeDialog');
+  if(!backdrop)return;
+  const title=document.getElementById('messlifeDialogTitle');
+  const message=document.getElementById('messlifeDialogMessage');
+  const actions=document.getElementById('messlifeDialogActions');
+  let resolver=null;
+  function close(value){
+    backdrop.classList.remove('show');
+    backdrop.setAttribute('aria-hidden','true');
+    if(resolver){const r=resolver;resolver=null;r(value);}
+  }
+  window.messlifeDialog=function(opts){
+    opts=opts||{};
+    title.textContent=opts.title||'Aviso';
+    message.textContent=opts.message||'';
+    actions.innerHTML='';
+    if(opts.confirm){
+      const cancel=document.createElement('button');
+      cancel.className='dialog-btn cancel';
+      cancel.textContent=opts.cancelText||'CANCELAR';
+      cancel.onclick=()=>close(false);
+      const ok=document.createElement('button');
+      ok.className='dialog-btn confirm';
+      ok.textContent=opts.confirmText||'ACEPTAR';
+      ok.onclick=()=>close(true);
+      actions.append(cancel,ok);
+      backdrop.onclick=e=>{if(e.target===backdrop)close(false)};
+      backdrop.onkeydown=e=>{if(e.key==='Escape')close(false)};
+      backdrop.tabIndex=-1;
+      backdrop.focus();
+      backdrop.classList.add('show');
+      backdrop.setAttribute('aria-hidden','false');
+      return new Promise(r=>resolver=r);
+    }
+    const ok=document.createElement('button');
+    ok.className='dialog-btn confirm';
+    ok.textContent=opts.okText||'ACEPTAR';
+    ok.onclick=()=>close(true);
+    actions.append(ok);
+    backdrop.onclick=e=>{if(e.target===backdrop)close(true)};
+    backdrop.classList.add('show');
+    backdrop.setAttribute('aria-hidden','false');
+    return new Promise(r=>resolver=r);
+  };
+  window.alert=function(msg){
+    return messlifeDialog({title:'Aviso',message:String(msg),okText:'ACEPTAR'});
+  };
+  window.confirm=function(msg){
+    return messlifeDialog({title:'Confirmar',message:String(msg),confirm:true,confirmText:'CONFIRMAR'});
+  };
+})();
+</script></body>
+</html>

@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MESSLIFE — Organizador</title>
+<style>
+:root{--bg:#0d0f16;--panel:#171a25;--panel2:#202434;--text:#f7f7fb;--muted:#a7acbd;--line:#34394d;--purple:#9a43ff;--cyan:#16d5e6}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+.wrap{max-width:900px;margin:auto;padding-bottom:48px}
+.hero{position:relative;overflow:hidden;border-radius:0 0 30px 30px;background:#111;min-height:460px}
+.hero img{width:100%;height:600px;object-fit:cover;object-position:center top;display:block}
+
+.hero-content{position:absolute;z-index:2;left:0;right:0;top:24px;padding:0 24px;display:flex;justify-content:center;align-items:flex-start}
+.kicker{display:inline-flex;align-items:center;justify-content:center;padding:11px 20px;border:1px solid rgba(22,213,230,.7);border-radius:14px;background:rgba(13,15,22,.78);box-shadow:0 0 0 1px rgba(154,67,255,.22) inset,0 8px 24px rgba(0,0,0,.25);font-size:12px;letter-spacing:2px;font-weight:800;color:#fff;text-transform:uppercase;margin:0;backdrop-filter:blur(5px)}
+main{padding:24px 18px}.tools-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 4px 14px}
+.section-title{font-size:13px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);font-weight:800}
+.global-tools{display:flex;gap:8px}
+.global-tool{width:38px;height:38px;border:1px solid var(--line);border-radius:11px;background:var(--panel);color:#fff;font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.global-tool:hover{border-color:var(--cyan)}
+.global-tool.locked{border-color:var(--purple);box-shadow:0 0 0 1px var(--purple) inset,0 0 12px rgba(154,67,255,.18);color:var(--cyan)}
+.global-tool[disabled]{opacity:.45;cursor:not-allowed}
+.lock-status{font-size:10px;color:var(--muted);margin-top:-8px;margin-bottom:10px;text-align:right}
+
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:760px;margin:0 auto}
+.card{background:rgba(23,26,37,.88);border:1px solid var(--line);border-radius:16px;padding:0;min-height:0;position:relative;overflow:hidden}
+.card:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:linear-gradient(180deg,var(--purple),var(--cyan))}
+.card h2{margin:0;font-size:16px;letter-spacing:.7px}
+.card p{display:none}
+.card .btn{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;margin:0;padding:11px 13px 11px 17px;border:0;border-radius:15px;background:transparent;color:#fff;font-weight:900;font-size:14px;text-decoration:none}
+.card .btn:after{content:"›";font-size:26px;line-height:1;color:var(--cyan);font-weight:400}
+.card .btn:hover{background:linear-gradient(90deg,rgba(154,67,255,.18),rgba(22,213,230,.12))}
+footer{text-align:center;color:#686e82;font-size:12px;padding:12px 24px}
+@media(max-width:650px){
+  .hero{min-height:370px}
+  .hero img{height:430px;object-position:center top}
+  .hero-content{top:18px}
+  main{padding:18px 12px}
+  .grid{grid-template-columns:1fr 1fr;gap:8px}
+  .card .btn{padding:10px 10px 10px 14px;font-size:12px}
+  .card h2{font-size:14px}
+}
+
+.dialog-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.66);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
+.dialog-backdrop.show{display:flex}
+.dialog{width:min(100%,430px);background:#20232e;border:1px solid #34394d;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,.55),0 0 0 1px rgba(154,67,255,.12) inset;overflow:hidden}
+.dialog-accent{height:4px;background:linear-gradient(90deg,#9a43ff,#657cf5,#16d5e6)}
+.dialog-body{padding:22px 22px 18px}
+.dialog-brand{font-size:11px;letter-spacing:2px;font-weight:900;color:#16d5e6;text-transform:uppercase;margin-bottom:10px}
+.dialog-title{font-size:20px;font-weight:900;margin:0 0 9px;color:#f7f7fb}
+.dialog-message{font-size:15px;line-height:1.5;color:#a7acbd;margin:0}
+.dialog-actions{display:flex;gap:10px;padding:0 22px 20px;justify-content:flex-end}
+.dialog-btn{border:0;border-radius:12px;padding:12px 18px;font-weight:900;font-size:13px;cursor:pointer}
+.dialog-btn.cancel{background:#2a2e3d;color:#fff}
+.dialog-btn.confirm{background:linear-gradient(90deg,#9a43ff,#657cf5,#16d5e6);color:#090a10}
+</style>
+
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="application-name" content="MESSLIFE">
+<meta name="theme-color" content="#0b0d13">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<style>
+#installMesslife{display:none;position:fixed;right:18px;bottom:18px;z-index:5000;border:0;border-radius:14px;padding:12px 16px;font-weight:900;font-size:13px;color:#090a10;background:linear-gradient(90deg,#9a43ff,#657cf5,#16d5e6);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+#installMesslife.show{display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <img src="assets/messlife-cover.png" alt="Portada MESSLIFE: tres ciclistas recorriendo una ciudad">
+  </header>
+  <main>
+    <div class="tools-head">
+      <div class="section-title">Panel del organizador</div>
+      <div class="global-tools">
+        <button class="global-tool" id="globalReset" title="Resetear toda la información" aria-label="Resetear toda la información">↻</button>
+        <button class="global-tool" id="exportRace" title="Exportar carrera" aria-label="Exportar carrera">⇩</button>
+        <button class="global-tool" id="importRace" title="Importar carrera" aria-label="Importar carrera">⇧</button>
+        <button class="global-tool" id="globalLock" title="Bloquear datos" aria-label="Bloquear o desbloquear datos">🔓</button>
+      </div>
+    </div>
+    <div class="lock-status" id="lockStatus"></div>
+    <div class="grid">
+      <section class="card"><a class="btn" href="apps/jugadores/index.html"><h2>JUGADORES</h2></a></section>
+      <section class="card"><a class="btn" href="apps/checkpoints/index.html"><h2>CHECKPOINTS</h2></a></section>
+      <section class="card"><a class="btn" href="apps/manifiesto/index.html"><h2>MANIFIESTO</h2></a></section>
+      <section class="card"><a class="btn" href="apps/riesgos/index.html"><h2>RIESGOS</h2></a></section>
+      <section class="card"><a class="btn" href="apps/dados/index.html"><h2>DADOS</h2></a></section>
+    </div></main>
+  <footer>MESSLIFE · Herramientas del organizador</footer>
+</div>
+
+<script>
+const MESSLIFE_LOCK_KEY='messlife_locked';
+const MESSLIFE_STORAGE_KEYS=[
+  'messlife_players','messlife_checkpoints','messlife_manifest','messlife_risks','messlife_dice'
+];
+
+function messlifeIsLocked(){
+  return localStorage.getItem(MESSLIFE_LOCK_KEY)==='1';
+}
+function updateGlobalLockUI(){
+  const locked=messlifeIsLocked();
+  const btn=document.getElementById('globalLock');
+  const status=document.getElementById('lockStatus');
+  if(btn){
+    btn.textContent=locked?'🔒':'🔓';
+    btn.classList.toggle('locked',locked);
+    btn.title=locked?'Desbloquear datos':'Bloquear datos';
+    btn.setAttribute('aria-label',locked?'Desbloquear datos':'Bloquear datos');
+  }
+  if(status) status.textContent=locked?'DATOS BLOQUEADOS · Los reinicios y cambios de orden están protegidos.':'';
+}
+async function globalReset(){
+  if(messlifeIsLocked()){
+    await alert('Los datos están bloqueados. Desbloquéalos para poder reiniciar la información.');
+    return;
+  }
+  const confirmed=await confirm('¿Reiniciar TODA la información de MESSLIFE? Se borrarán jugadores, checkpoints, manifiesto, riesgos e historial de dados.');
+  if(!confirmed)return;
+  MESSLIFE_STORAGE_KEYS.forEach(k=>localStorage.removeItem(k));
+  await alert('Toda la información fue reiniciada.');
+}
+document.getElementById('globalReset')?.addEventListener('click',globalReset);
+document.getElementById('globalLock')?.addEventListener('click',async()=>{
+  const locked=messlifeIsLocked();
+  if(locked){
+    const confirmed=await confirm('¿Desbloquear los datos?');
+    if(!confirmed)return;
+    localStorage.removeItem(MESSLIFE_LOCK_KEY);
+  }else{
+    localStorage.setItem(MESSLIFE_LOCK_KEY,'1');
+  }
+  updateGlobalLockUI();
+});
+updateGlobalLockUI();
+</script>
+
+<div class="dialog-backdrop" id="messlifeDialog" aria-hidden="true">
+  <div class="dialog" role="dialog" aria-modal="true">
+    <div class="dialog-accent"></div>
+    <div class="dialog-body">
+      <div class="dialog-brand">MESSLIFE</div>
+      <h3 class="dialog-title" id="messlifeDialogTitle">Aviso</h3>
+      <p class="dialog-message" id="messlifeDialogMessage"></p>
+    </div>
+    <div class="dialog-actions" id="messlifeDialogActions"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const backdrop=document.getElementById('messlifeDialog');
+  if(!backdrop)return;
+  const title=document.getElementById('messlifeDialogTitle');
+  const message=document.getElementById('messlifeDialogMessage');
+  const actions=document.getElementById('messlifeDialogActions');
+  let resolver=null;
+  function close(value){
+    backdrop.classList.remove('show');
+    backdrop.setAttribute('aria-hidden','true');
+    if(resolver){const r=resolver;resolver=null;r(value);}
+  }
+  window.messlifeDialog=function(opts){
+    opts=opts||{};
+    title.textContent=opts.title||'Aviso';
+    message.textContent=opts.message||'';
+    actions.innerHTML='';
+    if(opts.confirm){
+      const cancel=document.createElement('button');
+      cancel.className='dialog-btn cancel';
+      cancel.textContent=opts.cancelText||'CANCELAR';
+      cancel.onclick=()=>close(false);
+      const ok=document.createElement('button');
+      ok.className='dialog-btn confirm';
+      ok.textContent=opts.confirmText||'ACEPTAR';
+      ok.onclick=()=>close(true);
+      actions.append(cancel,ok);
+      backdrop.onclick=e=>{if(e.target===backdrop)close(false)};
+      backdrop.onkeydown=e=>{if(e.key==='Escape')close(false)};
+      backdrop.tabIndex=-1;
+      backdrop.focus();
+      backdrop.classList.add('show');
+      backdrop.setAttribute('aria-hidden','false');
+      return new Promise(r=>resolver=r);
+    }
+    const ok=document.createElement('button');
+    ok.className='dialog-btn confirm';
+    ok.textContent=opts.okText||'ACEPTAR';
+    ok.onclick=()=>close(true);
+    actions.append(ok);
+    backdrop.onclick=e=>{if(e.target===backdrop)close(true)};
+    backdrop.classList.add('show');
+    backdrop.setAttribute('aria-hidden','false');
+    return new Promise(r=>resolver=r);
+  };
+  window.alert=function(msg){
+    return messlifeDialog({title:'Aviso',message:String(msg),okText:'ACEPTAR'});
+  };
+  window.confirm=function(msg){
+    return messlifeDialog({title:'Confirmar',message:String(msg),confirm:true,confirmText:'CONFIRMAR'});
+  };
+})();
+</script>
+<script>
+if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+
+<input id="raceFile" type="file" accept="application/json,.json" style="display:none">
+<script>
+(function(){
+  const KEYS=['messlife_players','messlife_checkpoints','messlife_manifest','messlife_risks','messlife_dice'];
+  const file=document.getElementById('raceFile');
+  const exportBtn=document.getElementById('exportRace');
+  const importBtn=document.getElementById('importRace');
+  if(!file||!exportBtn||!importBtn)return;
+  exportBtn.addEventListener('click',async()=>{
+    const data={version:1,app:'MESSLIFE',exportedAt:new Date().toISOString(),data:{}};
+    KEYS.forEach(k=>{const v=localStorage.getItem(k); if(v!==null) data.data[k]=JSON.parse(v)});
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='MESSLIFE_carrera.json';
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    await alert('La carrera fue exportada correctamente.');
+  });
+  importBtn.addEventListener('click',()=>{
+    if(messlifeIsLocked()){
+      alert('Los datos están bloqueados. Desbloquéalos para importar una carrera.');
+      return;
+    }
+    file.value='';
+    file.click();
+  });
+  file.addEventListener('change',async()=>{
+    const f=file.files?.[0];
+    if(!f)return;
+    try{
+      const raw=JSON.parse(await f.text());
+      if(raw?.app!=='MESSLIFE'||!raw?.data)throw new Error('Formato');
+      const ok=await confirm('¿Importar esta carrera? Reemplazará los datos actuales de Jugadores, Checkpoints, Manifiesto, Riesgos y Dados.');
+      if(!ok)return;
+      KEYS.forEach(k=>localStorage.removeItem(k));
+      KEYS.forEach(k=>{
+        if(Object.prototype.hasOwnProperty.call(raw.data,k))
+          localStorage.setItem(k,JSON.stringify(raw.data[k]));
+      });
+      await alert('La carrera fue importada correctamente. Recarga la página para ver los datos.');
+    }catch(e){
+      await alert('El archivo no es una exportación válida de MESSLIFE.');
+    }
+  });
+})();
+</script>
+<button id="installMesslife" type="button">INSTALAR MESSLIFE</button>
+<script>
+(function(){
+  let deferredPrompt=null;
+  const btn=document.getElementById('installMesslife');
+  if(!btn)return;
+  window.addEventListener('beforeinstallprompt',e=>{
+    e.preventDefault();
+    deferredPrompt=e;
+    btn.classList.add('show');
+  });
+  btn.addEventListener('click',async()=>{
+    if(!deferredPrompt)return;
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt=null;
+    btn.classList.remove('show');
+  });
+  window.addEventListener('appinstalled',()=>btn.classList.remove('show'));
+})();
+</script>
+</body>
+</html>
