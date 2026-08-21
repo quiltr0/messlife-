@@ -1,5 +1,5 @@
 
-const CACHE = 'messlife-v34';
+const CACHE = 'messlife-v37';
 const SHELL = [
   './',
   './index.html',

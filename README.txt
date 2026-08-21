@@ -56,3 +56,22 @@ VERSIÓN 34 — VISOR LED
 - Se eliminó la apariencia de sección/panel convencional.
 - Checkpoints usan tipografía mucho más grande para lectura a distancia.
 - El temporizador es deliberadamente más pequeño y secundario.
+
+
+VERSIÓN 35 — ORIENTACIÓN Y VISOR RESPONSIVO
+- Se elimina la orientación landscape global del manifest para que la PWA instalada no quede forzada horizontal en todas sus pantallas.
+- El Visor conserva su solicitud específica de orientación horizontal cuando el navegador/sistema la permite.
+- Se ajustan tamaños de chips para que números de tres dígitos y las etiquetas P/M con tres dígitos no se salgan de sus marcos en horizontal.
+- El diseño vertical se conserva y el horizontal usa tamaños más contenidos.
+
+
+VERSIÓN 36 — VISOR VERTICAL COMPACTO
+- En móvil vertical se aprovecha el espacio superior para subir el bloque de checkpoints.
+- Se reducen márgenes y separaciones para permitir más checkpoints visibles.
+- El temporizador se desplaza hacia la parte inferior y queda separado del recorrido.
+- Se mantiene la presentación vertical que ya funcionaba correctamente.
+
+
+VERSIÓN 37 — TEMPORIZADOR FIJO
+- Los checkpoints tienen scroll propio cuando son demasiados para la pantalla.
+- El temporizador queda siempre visible y fijo abajo.
