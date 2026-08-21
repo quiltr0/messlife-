@@ -1,5 +1,5 @@
 
-const CACHE = 'messlife-v31';
+const CACHE = 'messlife-v34';
 const SHELL = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const SHELL = [
   './apps/manifiesto/index.html',
   './apps/riesgos/index.html',
   './apps/dados/index.html',
+  './apps/visor/index.html',
   './assets/messlife-cover.png',
   './assets/dice-holographic-reference.png',
   './assets/icons/messlife-192.png',
