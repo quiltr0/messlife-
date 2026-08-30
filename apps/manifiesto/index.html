@@ -29,6 +29,11 @@ button{border:0;border-radius:12px;padding:12px 13px;font-weight:900;cursor:poin
 .player strong{font-size:15px}.progress{color:var(--m);font-size:12px}.bar{height:7px;background:#0e1118;border-radius:10px;overflow:hidden;margin-top:7px}.fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--cyan));border-radius:10px}
 .empty{color:var(--m);font-size:13px}
 .detail{display:none}.detail.active{display:block}
+.action-view{display:none}.action-view.active{display:block}
+.sign-view{display:none}.sign-view.active{display:block}
+.choice{width:100%;text-align:left;padding:16px;border:1px solid var(--line);background:var(--p2);color:#fff;border-radius:16px;margin:9px 0;cursor:pointer}
+.choice strong{display:block;font-size:15px;margin-bottom:5px}.choice span{display:block;color:var(--m);font-size:12px;line-height:1.4}.choice.sign{border-color:rgba(22,213,230,.65);box-shadow:0 0 0 1px rgba(22,213,230,.12) inset}.choice.view{border-color:rgba(154,67,255,.65)}
+.sign-card{text-align:center;padding:8px 0}.sign-icon{font-size:42px;color:var(--cyan);margin:6px 0}.cp-input{font-size:30px;font-weight:900;text-align:center;letter-spacing:2px;padding:16px;margin:12px 0 4px}.success{color:var(--green);font-weight:900;font-size:14px;margin-top:10px;min-height:20px}
 .detail-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
 .detail-head h2{margin:0}.back-detail{background:var(--p2);color:#fff}
 .checks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
@@ -67,6 +72,36 @@ button{border:0;border-radius:12px;padding:12px 13px;font-weight:900;cursor:poin
   <section class="panel" id="overview">
     <h2>Progreso de jugadores</h2>
     <div id="playerList" class="players"><div class="empty">Aún no hay jugadores registrados.</div></div>
+  </section>
+
+  <section class="panel action-view" id="actionView">
+    <div class="detail-head">
+      <div>
+        <h2 id="actionName">Jugador</h2>
+        <div class="small-note" id="actionProgress"></div>
+      </div>
+      <button class="back-detail" id="backAction">← VOLVER</button>
+    </div>
+    <div class="small-note">¿Qué deseas hacer?</div>
+    <button class="choice sign" id="goSign">✍️ <strong>FIRMAR CHECKPOINT</strong><span>Registrar únicamente el checkpoint que el jugador acaba de cruzar, sin mostrar el resto del Manifiesto.</span></button>
+    <button class="choice view" id="goDetail">👁️ <strong>VER MANIFIESTO</strong><span>Consultar checkpoints firmados, pendientes y el recorrido completo de este jugador.</span></button>
+  </section>
+
+  <section class="panel sign-view" id="signView">
+    <div class="detail-head">
+      <div>
+        <h2>Firmar checkpoint</h2>
+        <div class="small-note" id="signPlayerName"></div>
+      </div>
+      <button class="back-detail" id="backSign">← VOLVER</button>
+    </div>
+    <div class="sign-card">
+      <div class="sign-icon">✍</div>
+      <div class="helper">Ingresa el número o letra del checkpoint que el jugador acaba de cruzar.</div>
+      <input id="checkpointInput" class="cp-input" inputmode="text" autocomplete="off" placeholder="Ej: 42">
+      <div id="signStatus" class="status"></div>
+      <div class="actions"><button class="primary" id="confirmSign">FIRMAR CHECKPOINT</button><button class="secondary" id="cancelSign">CANCELAR</button></div>
+    </div>
   </section>
 
   <section class="panel detail" id="detail">
@@ -162,17 +197,24 @@ function renderPlayers(){
   }).join('');
   list.querySelectorAll('.player').forEach(el=>el.addEventListener('click',()=>openPlayer(+el.dataset.index)));
 }
+function playerStats(p){
+  const done=p.done.length,total=checkpoints.length,pct=total?Math.round(done/total*100):0;
+  return {done,total,pct};
+}
+function renderAction(){
+  if(selectedPlayer===null)return;
+  const p=players[selectedPlayer],st=playerStats(p);
+  $('actionName').textContent=p.name;
+  $('actionProgress').textContent=`${st.done} de ${st.total} checkpoints firmados · ${st.pct}%`;
+}
 function renderDetail(){
   if(selectedPlayer===null)return;
-  const p=players[selectedPlayer];
+  const p=players[selectedPlayer],st=playerStats(p);
   $('detailName').textContent=p.name;
-  const done=p.done.length,total=checkpoints.length,pct=total?Math.round(done/total*100):0;
-  $('detailProgress').textContent=`${done} de ${total} checkpoints cumplidos · ${pct}%`;
+  $('detailProgress').textContent=`${st.done} de ${st.total} checkpoints cumplidos · ${st.pct}%`;
   $('detailChecks').innerHTML=checkpoints.map(cp=>{
     const checked=p.done.includes(cp);
-    return `<div class="check ${checked?'done':''}">
-      <label><input type="checkbox" data-cp="${escapeHtml(cp)}" ${checked?'checked':''}>${escapeHtml(cp)}</label>
-    </div>`;
+    return `<div class="check ${checked?'done':''}"><label><input type="checkbox" data-cp="${escapeHtml(cp)}" ${checked?'checked':''}>${escapeHtml(cp)}</label></div>`;
   }).join('');
   $('detailChecks').querySelectorAll('input').forEach(cb=>cb.addEventListener('change',e=>{
     const cp=e.target.dataset.cp,pp=players[selectedPlayer];
@@ -181,8 +223,44 @@ function renderDetail(){
     renderDetail();renderPlayers();save();
   }));
 }
+function hideSubViews(){
+  $('actionView').classList.remove('active');
+  $('signView').classList.remove('active');
+  $('detail').classList.remove('active');
+}
 function openPlayer(i){
-  selectedPlayer=i;$('overview').style.display='none';$('detail').classList.add('active');renderDetail();
+  selectedPlayer=i;
+  $('overview').style.display='none';
+  hideSubViews();
+  $('actionView').classList.add('active');
+  renderAction();
+}
+function openSign(){
+  if(selectedPlayer===null)return;
+  const p=players[selectedPlayer];
+  $('signPlayerName').textContent=p.name;
+  $('checkpointInput').value='';
+  $('signStatus').textContent='';
+  hideSubViews();$('signView').classList.add('active');
+  setTimeout(()=>$('checkpointInput').focus(),80);
+}
+function normalizeCheckpoint(v){return cleanValue(String(v||'')).trim().toUpperCase()}
+async function signCheckpoint(){
+  if(selectedPlayer===null)return;
+  const cp=normalizeCheckpoint($('checkpointInput').value);
+  const p=players[selectedPlayer];
+  if(!cp){$('signStatus').textContent='Ingresa un checkpoint.';return}
+  if(!checkpoints.includes(cp)){
+    $('signStatus').textContent='Checkpoint no válido para esta carrera.';return
+  }
+  if(p.done.includes(cp)){
+    $('signStatus').textContent='Este checkpoint ya está firmado.';return
+  }
+  p.done.push(cp);
+  save();renderPlayers();
+  $('signStatus').innerHTML='<span class="success">✓ CHECKPOINT FIRMADO</span>';
+  await new Promise(r=>setTimeout(r,500));
+  hideSubViews();$('actionView').classList.add('active');renderAction();
 }
 function save(){
   try{localStorage.setItem('messlife_manifest',JSON.stringify({checkpoints,players}))}catch(e){}
@@ -199,16 +277,24 @@ function load(){
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')save();});
 window.addEventListener('pagehide',save);
 
-$('backOverview').addEventListener('click',()=>{
-  selectedPlayer=null;$('detail').classList.remove('active');$('overview').style.display='block';renderPlayers();
-});
+function backToOverview(){
+  selectedPlayer=null;hideSubViews();$('overview').style.display='block';renderPlayers();
+}
+$('backOverview').addEventListener('click',backToOverview);
+$('backAction').addEventListener('click',backToOverview);
+$('backSign').addEventListener('click',()=>{hideSubViews();$('actionView').classList.add('active');renderAction();});
+$('cancelSign').addEventListener('click',()=>{hideSubViews();$('actionView').classList.add('active');renderAction();});
+$('goSign').addEventListener('click',openSign);
+$('goDetail').addEventListener('click',()=>{hideSubViews();$('detail').classList.add('active');renderDetail();});
+$('confirmSign').addEventListener('click',signCheckpoint);
+$('checkpointInput').addEventListener('keydown',e=>{if(e.key==='Enter')signCheckpoint();});
 $('reset').addEventListener('click',async()=>{
   if(blockResetIfLocked())return;
   const confirmed=await confirm('¿Reiniciar el manifiesto? Se borrarán los checks realizados, pero se mantendrán los jugadores y los checkpoints de la carrera.');
   if(!confirmed)return;
   players=players.map(p=>({name:p.name,done:[]}));
   selectedPlayer=null;
-  $('detail').classList.remove('active');$('overview').style.display='block';
+  hideSubViews();$('overview').style.display='block';
   renderPlayers();save();
 });
 load();

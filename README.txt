@@ -75,3 +75,10 @@ VERSIÓN 36 — VISOR VERTICAL COMPACTO
 VERSIÓN 37 — TEMPORIZADOR FIJO
 - Los checkpoints tienen scroll propio cuando son demasiados para la pantalla.
 - El temporizador queda siempre visible y fijo abajo.
+
+
+VERSIÓN 38 — SCROLL Y TEMPORIZADOR FIJO CORREGIDOS
+- Se reemplaza el layout flex del visor móvil por posicionamiento explícito.
+- La zona de checkpoints ocupa el espacio superior y tiene scroll táctil real.
+- El temporizador queda anclado al borde inferior de la pantalla y siempre visible.
+- El scroll de checkpoints no mueve ni oculta el temporizador.
